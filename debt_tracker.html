@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debt Payoff Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+        
+        .card .amount {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .debt-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .debt-item {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .debt-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .debt-item.priority-high {
+            border-left: 5px solid #ff4757;
+        }
+        
+        .debt-item.priority-medium {
+            border-left: 5px solid #ffa502;
+        }
+        
+        .debt-item.priority-low {
+            border-left: 5px solid #2ed573;
+        }
+        
+        .debt-info h4 {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .debt-info .category {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .debt-amount {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        .payment-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .payment-btn:hover {
+            background: #219a52;
+        }
+        
+        .income-section {
+            background: #e8f5e8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .income-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #d4e6d4;
+        }
+        
+        .income-item:last-child {
+            border-bottom: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ed573);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .strategy-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .strategy-box h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .strategy-step {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ffeaa7;
+        }
+        
+        @media (max-width: 768px) {
+            .debt-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .payment-btn {
+                margin: 10px 0 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Debt Payoff Tracker</h1>
+            <p>Stay organized and debt-free!</p>
+        </div>
+        
+        <div class="content">
+            <div class="summary-cards">
+                <div class="card">
+                    <h3>TOTAL DEBT</h3>
+                    <div class="amount" id="totalDebt">RM 3,381.82</div>
+                </div>
+                <div class="card">
+                    <h3>AVAILABLE CASH</h3>
+                    <div class="amount" id="availableCash">RM 2,786.67</div>
+                </div>
+                <div class="card">
+                    <h3>DEBTS PAID</h3>
+                    <div class="amount" id="debtsPaid">RM 0.00</div>
+                </div>
+                <div class="card">
+                    <h3>PROGRESS</h3>
+                    <div class="amount" id="progressPercent">0%</div>
+                </div>
+            </div>
+            
+            <div class="income-section">
+                <h3>📅 Income Schedule (August - October 2025)</h3>
+                <div style="background: #e8f8f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="color: #27ae60; margin-bottom: 10px;">August 2025</h4>
+                    <div class="income-item">
+                        <span>Aug 7 - Internship Payment (July work)</span>
+                        <strong>RM 500.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Aug Weekends - Physiotherapy Clinic (4 Saturdays)</span>
+                        <strong>RM 280.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Aug 23-25 - Monthly Allowance</span>
+                        <strong>RM 250.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Father's Parking Money (Optional to keep)</span>
+                        <strong>RM 60.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>End of Aug - Government (SPayGlobal - Cannot Withdraw)</span>
+                        <strong>RM 600.00 🔒</strong>
+                    </div>
+                    <div class="income-item" style="font-weight: bold; border-top: 2px solid #27ae60; margin-top: 10px;">
+                        <span>August Spendable Cash:</span>
+                        <strong>RM 1,090.00</strong>
+                    </div>
+                </div>
+                
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="color: #f57c00; margin-bottom: 10px;">September 2025</h4>
+                    <div class="income-item">
+                        <span>Sep 7 - Internship Payment (August work - Full month)</span>
+                        <strong>RM 500.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Sep Weekends - Physiotherapy Clinic (~4 Saturdays)</span>
+                        <strong>RM 280.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Sep 23-25 - Monthly Allowance</span>
+                        <strong>RM 250.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Father's Parking Money (Optional to keep)</span>
+                        <strong>RM 60.00</strong>
+                    </div>
+                    <div class="income-item" style="font-weight: bold; border-top: 2px solid #f57c00; margin-top: 10px;">
+                        <span>September Spendable Cash:</span>
+                        <strong>RM 1,090.00</strong>
+                    </div>
+                </div>
+                
+                <div style="background: #fce4ec; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #c2185b; margin-bottom: 10px;">October 2025 & Beyond</h4>
+                    <div class="income-item">
+                        <span>Oct 7 - Final Internship Payment (Sep 9 only = 1 day)</span>
+                        <strong>RM 16.67</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Oct 23-25 - Monthly Allowance</span>
+                        <strong>RM 250.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Monthly - Physiotherapy Clinic (4 Saturdays)</span>
+                        <strong>RM 280.00</strong>
+                    </div>
+                    <div class="income-item">
+                        <span>Father's Parking Money (Optional to keep)</span>
+                        <strong>RM 60.00</strong>
+                    </div>
+                    <div class="income-item" style="font-weight: bold; border-top: 2px solid #c2185b; margin-top: 10px;">
+                        <span>October Spendable Cash:</span>
+                        <strong>RM 606.67</strong>
+                    </div>
+                    <div class="income-item" style="font-weight: bold; color: #c2185b;">
+                        <span>Ongoing Monthly Income (Nov+):</span>
+                        <strong>RM 590.00</strong>
+                    </div>
+                </div>
+                
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 2px solid #2196f3;">
+                    <div class="income-item" style="font-weight: bold; font-size: 1.1em;">
+                        <span>Total 3-Month Spendable Cash:</span>
+                        <strong>RM 2,786.67</strong>
+                    </div>
+                </div>
+                
+                <div style="background: #fff9c4; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #f9ca24;">
+                    <h4 style="color: #f39c12; margin-bottom: 10px;">💡 Money-Saving Tip</h4>
+                    <p style="margin: 0; color: #856404;">
+                        <strong>Park off-campus & walk:</strong> Save RM60/month by not using the parking pass. 
+                        Your father sends RM60 for parking - you could ask to redirect this RM60 toward debt payments instead!
+                        <br><br>
+                        <strong>Note:</strong> July allowance already spent. Next allowances: Aug 23-25, Sep 23-25, Oct 23-25.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="debt-list">
+                <h3>🎯 Debt Payment Strategy (Recommended Order)</h3>
+                
+                <div class="debt-item priority-high" data-debt="152.15">
+                    <div class="debt-info">
+                        <h4>Grab PayLater Postpaid</h4>
+                        <div class="category">HIGH PRIORITY - PayLater (High Interest)</div>
+                        <div style="font-size: 0.9em; color: #27ae60;">✅ Pay this FIRST - Smallest debt, quick win!</div>
+                    </div>
+                    <div>
+                        <div class="debt-amount">RM 152.15</div>
+                        <button class="payment-btn" onclick="markAsPaid('grab')">Mark as Paid</button>
+                    </div>
+                </div>
+                
+                <div class="debt-item priority-high" data-debt="412.30">
+                    <div class="debt-info">
+                        <h4>Club Funds (Cash)</h4>
+                        <div class="category">HIGH PRIORITY - Avoid Embezzlement Concerns!</div>
+                        <div style="font-size: 0.9em; color: #e74c3c;">⚠️ As treasurer, pay this ASAP to maintain trust</div>
+                    </div>
+                    <div>
+                        <div class="debt-amount">RM 412.30</div>
+                        <button class="payment-btn" onclick="markAsPaid('clubCash')">Mark as Paid</button>
+                    </div>
+                </div>
+                
+                <div class="debt-item priority-high" data-debt="809.70">
+                    <div class="debt-info">
+                        <h4>Club Funds (E-wallet)</h4>
+                        <div class="category">HIGH PRIORITY - Avoid Embezzlement Concerns!</div>
+                        <div style="font-size: 0.9em; color: #e74c3c;">⚠️ Critical for maintaining treasurer reputation</div>
+                    </div>
+                    <div>
+                        <div class="debt-amount">RM 809.70</div>
+                        <button class="payment-btn" onclick="markAsPaid('clubEwallet')">Mark as Paid</button>
+                    </div>
+                </div>
+                
+                <div class="debt-item priority-low" data-debt="975.67">
+                    <div class="debt-info">
+                        <h4>SPayLater (ShopeePay) - Monthly Schedule</h4>
+                        <div class="category">LOW PRIORITY - Keep on Schedule (No Early Payment Discount)</div>
+                        <div style="font-size: 0.9em; color: #27ae60;">✅ Keep paying monthly - no savings from lump sum</div>
+                        <div style="font-size: 0.85em; color: #7f8c8d; margin-top: 5px;">
+                            Sep 1: RM200.66 → Oct 1: RM157.01 → Nov 1: RM145.50 → etc.
+                        </div>
+                        <div style="font-size: 0.85em; color: #f39c12; font-weight: bold;">
+                            💡 Total: RM975.67 (same whether monthly or lump sum)
+                        </div>
+                    </div>
+                    <div>
+                        <div class="debt-amount">RM 975.67</div>
+                        <button class="payment-btn" onclick="markAsPaid('spaylater')">Mark as Paid</button>
+                    </div>
+                </div>
+                
+                <div class="debt-item priority-low" data-debt="332.00">
+                    <div class="debt-info">
+                        <h4>Fiancée</h4>
+                        <div class="category">PERSONAL - Family/Relationship</div>
+                        <div style="font-size: 0.9em; color: #7f8c8d;">💕 Important for relationship, but likely flexible</div>
+                    </div>
+                    <div>
+                        <div class="debt-amount">RM 332.00</div>
+                        <button class="payment-btn" onclick="markAsPaid('fiancee')">Mark as Paid</button>
+                    </div>
+                </div>
+                
+                <div class="debt-item priority-low" data-debt="500.00">
+                    <div class="debt-info">
+                        <h4>Mother</h4>
+                        <div class="category">PERSONAL - Family</div>
+                        <div style="font-size: 0.9em; color: #7f8c8d;">👩‍👧‍👦 Family debt, likely understanding</div>
+                    </div>
+                    <div>
+                        <div class="debt-amount">RM 500.00</div>
+                        <button class="payment-btn" onclick="markAsPaid('mother')">Mark as Paid</button>
+                    </div>
+                </div>
+                
+                <div class="debt-item priority-low" data-debt="200.00">
+                    <div class="debt-info">
+                        <h4>Father (Estimated)</h4>
+                        <div class="category">PERSONAL - Family</div>
+                        <div style="font-size: 0.9em; color: #7f8c8d;">👨‍👧‍👦 Estimated amount, confirm actual figure</div>
+                    </div>
+                    <div>
+                        <div class="debt-amount">RM 200.00</div>
+                        <button class="payment-btn" onclick="markAsPaid('father')">Mark as Paid</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="strategy-box">
+                <h3>🎯 Recommended Payment Strategy</h3>
+                <div class="strategy-step">
+                    <strong>Step 1:</strong> Aug 7 - Pay Grab PayLater Postpaid (RM152.15) immediately when you get your internship payment. Must pay by due date.
+                </div>
+                <div class="strategy-step">
+                    <strong>Step 2:</strong> Pay Club Funds (Cash) - RM412.30. As treasurer, this protects your reputation and eliminates any embezzlement concerns.
+                </div>
+                <div class="strategy-step">
+                    <strong>Step 3:</strong> Pay Club Funds (E-wallet) - RM809.70. Complete your treasurer obligations and restore full trust.
+                </div>
+                <div class="strategy-step">
+                    <strong>Step 4:</strong> Keep SPayLater on monthly schedule (no early payment discount). Sep 1: RM200.66, Oct 1: RM157.01, etc. Use remaining cash flow for family debts or savings.
+                </div>
+                <div class="strategy-step">
+                    <strong>Step 5:</strong> Address family debts with extra cash flow, as they're flexible and could improve relationships when paid off.
+                </div>
+                
+                <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                    <h4 style="color: #155724; margin-bottom: 10px;">💡 Revised Strategy: SPayLater Monthly vs Lump Sum</h4>
+                    <div style="font-size: 0.95em; color: #155724;">
+                        <strong>Since no early payment discount:</strong><br>
+                        • Keep SPayLater on monthly schedule (RM975.67 total either way)<br>
+                        • Monthly payments fit your budget: Sep RM200.66, Oct RM157.01, etc.<br>
+                        • Use freed-up cash for club funds, family debts, or even headphones<br>
+                        • Your ongoing RM590/month easily covers the declining payments
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: #d1ecf1; border-radius: 8px; border: 1px solid #bee5eb;">
+                <h3>🎧 Sony ULT Wear - Revised Analysis</h3>
+                <p>Headphones cost: <strong>RM 699</strong> | Your 3-month cash: <strong>RM 2,786.67</strong></p>
+                <p style="color: #0c5460; margin-top: 10px;">Since SPayLater has no early payment discount, you have more flexibility!</p>
+                <p style="color: #721c24; font-weight: bold; margin-top: 10px;">Priority debts to clear: Club funds (RM1,222) + Grab PayLater (RM152) = RM1,374</p>
+                <p style="margin-top: 15px; padding: 15px; background: #d4edda; border-radius: 5px;">
+                    <strong>💡 New Strategy:</strong><br>
+                    1. Clear priority debts (RM1,374) first<br>
+                    2. Keep SPayLater on monthly schedule (fits your budget)<br>
+                    3. Remaining cash: RM1,412+ for headphones or family debts<br>
+                    4. Monthly SPayLater payments easily covered by your RM590/month income
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let debts = {
+            grab: 152.15,
+            clubCash: 412.30,
+            clubEwallet: 809.70,
+            spaylater: 975.67,
+            fiancee: 332.00,
+            mother: 500.00,
+            father: 200.00
+        };
+        
+        let paidDebts = {};
+        const totalOriginalDebt = 3381.82;
+        
+        function markAsPaid(debtKey) {
+            if (confirm(`Mark ${getDebtName(debtKey)} as paid?`)) {
+                paidDebts[debtKey] = debts[debtKey];
+                
+                // Update UI
+                const debtItem = document.querySelector(`[data-debt="${debts[debtKey]}"]`);
+                debtItem.style.opacity = '0.5';
+                debtItem.style.textDecoration = 'line-through';
+                debtItem.querySelector('.payment-btn').textContent = '✅ Paid';
+                debtItem.querySelector('.payment-btn').disabled = true;
+                debtItem.querySelector('.payment-btn').style.background = '#95a5a6';
+                
+                updateSummary();
+            }
+        }
+        
+        function getDebtName(key) {
+            const names = {
+                grab: 'Grab PayLater Postpaid',
+                clubCash: 'Club Funds (Cash)',
+                clubEwallet: 'Club Funds (E-wallet)',
+                spaylater: 'SPayLater',
+                fiancee: 'Fiancée',
+                mother: 'Mother',
+                father: 'Father'
+            };
+            return names[key];
+        }
+        
+        function updateSummary() {
+            const totalPaid = Object.values(paidDebts).reduce((sum, amount) => sum + amount, 0);
+            const remainingDebt = totalOriginalDebt - totalPaid;
+            const progressPercent = Math.round((totalPaid / totalOriginalDebt) * 100);
+            
+            document.getElementById('totalDebt').textContent = `RM ${remainingDebt.toFixed(2)}`;
+            document.getElementById('debtsPaid').textContent = `RM ${totalPaid.toFixed(2)}`;
+            document.getElementById('progressPercent').textContent = `${progressPercent}%`;
+            
+            // Update progress bar if it exists
+            const progressBar = document.querySelector('.progress-fill');
+            if (progressBar) {
+                progressBar.style.width = `${progressPercent}%`;
+            }
+        }
+    </script>
+</body>
+</html>
